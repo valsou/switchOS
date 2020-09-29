@@ -21,12 +21,7 @@ FocusScope
     }
 
     // Text {
-    //     text: {
-    //         if (currentGame !== null) {
-    //             return currentGame.title+"\n"+currentGameIndex+"\ncurrentCollection: "+allCollections[collectionIndex].games.get(0).title
-    //         }
-    //         return "none"
-    //     }
+    //     text: "name : "+currentCollecion.name+" // shortname : "+currentCollection.shortName
     //     color: "red"
     //     anchors {
     //         top: parent.top
@@ -230,10 +225,17 @@ FocusScope
 
                         asynchronous: true
                         //smooth: true
-                        source: modelData.assets.screenshots[0] ? modelData.assets.screenshots[0] : ""
+                        source: {
+                            if (currentCollection.shortName !== "android") {
+                                if (modelData.assets.screenshots[0]) {
+                                    return modelData.assets.screenshots[0]
+                                }
+                                return ""
+                            }
+                            return ""
+                        }
                         sourceSize { width: 256; height: 256 }
                         fillMode: Image.PreserveAspectCrop
-
                     }//*/
 
                     Rectangle
@@ -259,11 +261,22 @@ FocusScope
                         asynchronous: true
 
                         //opacity: 0
-                        source: modelData.assets.logo ? modelData.assets.logo : ""
+                        source: {
+                            if (currentCollection.shortName == "android") {
+                                if (modelData.assets.boxFront) {
+                                    return modelData.assets.boxFront
+                                }
+                                return ""
+                            }
+                            if (modelData.assets.logo) {
+                                return modelData.assets.logo
+                            }
+                            return ""
+                        }
                         sourceSize { width: 256; height: 256 }
                         fillMode: Image.PreserveAspectFit
                         smooth: true
-                        visible: modelData.assets.logo ? modelData.assets.logo : ""
+                        visible: gamelogo.source !== ""
                         z:8
                     }
 
