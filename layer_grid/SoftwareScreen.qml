@@ -1,5 +1,6 @@
 import QtQuick 2.8
 import QtGraphicalEffects 1.0
+import SortFilterProxyModel 0.2
 import "../global"
 import "../utils.js" as Utils
 import "qrc:/qmlutils" as PegasusUtils
@@ -8,6 +9,32 @@ FocusScope
 {
 
     property int numcolumns: widescreen ? 6 : 3
+    property var currentGame: {
+        if (gameGrid.count === 0) {
+            return null;
+        }
+        if (currentCollection.shortName === "auto-favorites") {
+            return api.allGames.get(allFavorites.mapToSource(currentGameIndex))
+        }
+        return currentCollection.games.get(currentGameIndex)
+    }
+
+    // Text {
+    //     text: {
+    //         if (currentGame !== null) {
+    //             return currentGame.title
+    //         } else {
+    //             return "none"
+    //         }
+
+    //     }
+    //     color: "red"
+    //     anchors {
+    //         top: parent.top
+    //         left: parent.left
+    //     }
+    //     z: 999
+    // }
 
     Item
     {
@@ -24,6 +51,12 @@ FocusScope
 
             if (api.keys.isDetails(event)) {
                 event.accepted = true;
+                if (currentGame !== null) {
+                    currentGame.favorite = !currentGame.favorite
+                    if (gameGrid.count === 0) {
+                        showHomeScreen();
+                    }
+                }
                 return;
             }
             if (api.keys.isCancel(event)) {
@@ -64,7 +97,7 @@ FocusScope
                 Text
                 {
                     id: collectionTitle
-                    text: api.collections.get(collectionIndex).name
+                    text: currentCollection.name
                     color: theme.text
                     font.family: titleFont.name
                     font.pixelSize: Math.round(screenheight*0.0277)
@@ -98,7 +131,7 @@ FocusScope
                 height: 1
                 color: theme.secondary
             }
-            
+
 
         }
 
@@ -112,9 +145,9 @@ FocusScope
             height: topBar.height
             z: 4
         }
-        
+
         // Game grid
-        GridView 
+        GridView
         {
             id: gameGrid
             focus: true
@@ -123,7 +156,10 @@ FocusScope
                 if (api.keys.isAccept(event) && !event.isAutoRepeat) {
                     event.accepted = true;
                     //currentItem.currentGame.launch();
-                    launchGame();
+                    // launchGame();
+                    if (currentGame !== null) {
+                        currentGame.launch()
+                    }
                 }
             }
 
@@ -132,6 +168,7 @@ FocusScope
             Keys.onLeftPressed:     { navSound.play(); moveCurrentIndexLeft() }
             Keys.onRightPressed:    { navSound.play(); moveCurrentIndexRight() }
 
+            // currentIndex: currentGameIndex
             onCurrentIndexChanged: {
                 currentGameIndex = currentIndex;
                 return;
@@ -143,7 +180,7 @@ FocusScope
                 right: parent.right; rightMargin: vpx(63)
                 bottom: parent.bottom
             }
-            
+
             cellWidth: width / numcolumns
             cellHeight: cellWidth
             preferredHighlightBegin: Math.round(screenheight*0.1388)
@@ -152,14 +189,14 @@ FocusScope
             snapMode: ListView.SnapToItem
             highlightMoveDuration: 200
 
-            
-            model: api.collections.get(collectionIndex).games
-            delegate: gameGridDelegate            
 
-            Component 
+            model: currentCollection.games
+            delegate: gameGridDelegate
+
+            Component
             {
                 id: gameGridDelegate
-                
+
                 Item
                 {
                     id: delegateContainer
@@ -173,16 +210,16 @@ FocusScope
                         id: screenshot
                         width: parent.width
                         height: parent.height
-                        
+
                         asynchronous: true
                         //smooth: true
                         source: modelData.assets.screenshots[0] ? modelData.assets.screenshots[0] : ""
                         sourceSize { width: 256; height: 256 }
                         fillMode: Image.PreserveAspectCrop
-                        
+
                     }//*/
 
-                    Rectangle 
+                    Rectangle
                     {
                         width: parent.width
                         height: parent.height
@@ -211,6 +248,17 @@ FocusScope
                         smooth: true
                         visible: modelData.assets.logo ? modelData.assets.logo : ""
                         z:8
+                    }
+
+                    Rectangle {
+                        width: vpx(20)
+                        height: vpx(35)
+                        anchors {
+                            left: parent.left; leftMargin: vpx(15)
+                            top: parent.top; topMargin: selected ? -vpx(5) : 0
+                        }
+                        color: "#F90F79"
+                        visible: modelData.favorite && currentCollection.shortName !== "auto-favorites"
                     }
 
                     /*DropShadow {
@@ -242,7 +290,7 @@ FocusScope
 
                     NumberAnimation { id: anim; property: "scale"; to: 0.7; duration: 100 }
                     //NumberAnimation { property: "scale"; to: 1.0; duration: 100 }
-                    
+
                     Rectangle {
                         id: outerborder
                         width: screenshot.width
@@ -275,7 +323,7 @@ FocusScope
                             z: 10
                         }
                     }
-                        
+
 
                     // Title bubble
                     Rectangle {
@@ -284,7 +332,7 @@ FocusScope
                         height: Math.round(screenheight*0.0611)
                         color: "white"
                         radius: vpx(4)
-                        
+
                         // Need to figure out how to stop it from clipping the margin
                         // mapFromItem and mapToItem are probably going to help
                         property int xpos: screenshot.width/2 - width/2
@@ -296,23 +344,23 @@ FocusScope
                             horizontalCenter: bubbletriangle.horizontalCenter
                             bottom: bubbletriangle.top
                         }
-                        
+
                         opacity: selected ? 0.95 : 0
                         //Behavior on opacity { NumberAnimation { duration: 50 } }
 
                         Text {
-                            id: gameTitle                        
+                            id: gameTitle
                             text: modelData.title
                             color: theme.accent
                             font.pixelSize: Math.round(screenheight*0.0222)
                             font.bold: true
                             font.family: titleFont.name
-                            
-                            anchors { 
+
+                            anchors {
                                 verticalCenter: parent.verticalCenter
                                 left: parent.left; leftMargin: vpx(27)
                             }
-                            
+
                         }
                     }
 
@@ -333,9 +381,9 @@ FocusScope
                         width: screenshot.width + vpx(18)
                         height: width
 
-                        
+
                         anchors.centerIn: screenshot
-                        
+
                         //x: vpx(-7)
                         //y: vpx(-7)
                         z: -10
