@@ -23,7 +23,9 @@ FocusScope
     property var allCollections: {
         let collections = api.collections.toVarArray()
         collections.unshift({"name": "Favorites", "shortName": "auto-favorites", "games": allFavorites})
+        collections.unshift({"name": "Last Played", "shortName": "auto-lastplayed", "games": allLastPlayed})
         collections.unshift({"name": "All Games", "shortName": "auto-allgames", "games": api.allGames})
+
         return collections
     }
     property var currentCollection: allCollections[collectionIndex]
@@ -32,6 +34,13 @@ FocusScope
         id: allFavorites
         sourceModel: api.allGames
         filters: ValueFilter { roleName: "favorite"; value: true; }
+    }
+
+    SortFilterProxyModel {
+        id: allLastPlayed
+        sourceModel: api.allGames
+        filters: ValueFilter { roleName: "playCount"; value: !0; }
+        sorters: RoleSorter { roleName: "lastPlayed"; sortOrder: Qt.DescendingOrder }
     }
 
     function modulo(a,n) {
