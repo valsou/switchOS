@@ -45,6 +45,7 @@ FocusScope
     SortFilterProxyModel {
         id: allLastPlayed
         sourceModel: api.allGames
+        filters: ValueFilter { roleName: "lastPlayed"; value: ""; inverted: true; }
         sorters: RoleSorter { roleName: "lastPlayed"; sortOrder: Qt.DescendingOrder }
     }
 

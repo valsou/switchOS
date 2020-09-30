@@ -21,7 +21,7 @@ FocusScope
     }
 
     // Text {
-    //     text: currentGame.title+"("+currentGameIndex+")"
+    //     text: currentGame.title+"("+currentGameIndex+") / LastPlayed : "+currentGame.lastPlayed
     //     color: "red"
     //     anchors {
     //         top: parent.top
