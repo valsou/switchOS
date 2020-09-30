@@ -23,12 +23,18 @@ FocusScope
     property var allCollections: {
         let collections = api.collections.toVarArray()
         collections.unshift({"name": "Favorites", "shortName": "auto-favorites", "games": allFavorites})
-        collections.unshift({"name": "Last Played", "shortName": "auto-lastplayed", "games": allLastPlayed})
+        collections.unshift({"name": "Last Played", "shortName": "auto-lastplayed", "games": filterLastPlayed})
         collections.unshift({"name": "All Games", "shortName": "auto-allgames", "games": api.allGames})
 
         return collections
     }
     property var currentCollection: allCollections[collectionIndex]
+    property int maximumPlayedGames: {
+        if (allLastPlayed.count >= 17) {
+            return 17
+        }
+        return allLastPlayed.count
+    }
 
     SortFilterProxyModel {
         id: allFavorites
@@ -39,8 +45,13 @@ FocusScope
     SortFilterProxyModel {
         id: allLastPlayed
         sourceModel: api.allGames
-        filters: ValueFilter { roleName: "playCount"; value: !0; }
         sorters: RoleSorter { roleName: "lastPlayed"; sortOrder: Qt.DescendingOrder }
+    }
+
+    SortFilterProxyModel {
+        id: filterLastPlayed
+        sourceModel: allLastPlayed
+        filters: IndexFilter { maximumIndex: maximumPlayedGames }
     }
 
     function modulo(a,n) {

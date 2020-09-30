@@ -21,7 +21,7 @@ FocusScope
     }
 
     // Text {
-    //     text: "name : "+currentCollecion.name+" // shortname : "+currentCollection.shortName
+    //     text: currentGame.title+"("+currentGameIndex+")"
     //     color: "red"
     //     anchors {
     //         top: parent.top
